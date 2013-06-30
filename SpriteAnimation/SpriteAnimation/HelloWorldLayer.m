@@ -34,6 +34,32 @@
 	return scene;
 }
 
+-(void) initRobot {
+    
+    size = [[CCDirector sharedDirector] winSize];
+    
+    robot = [CCSprite spriteWithFile:@"spritebots_still_1.png"];
+    robot.position = ccp(size.width/2, size.height/2);
+    [self addChild:robot];
+    
+}
+
+-(void) animateRobot {
+    
+    CCAnimation* robotAnim = [CCAnimation animation];
+    for (int i = 2 ; i < 5 ; i++) {
+        [robotAnim addSpriteFrameWithFilename:[NSString stringWithFormat:@"spritebots_move_%i.png", i]];
+    }
+    
+    [robotAnim setDelayPerUnit:0.3f];
+    [robotAnim setRestoreOriginalFrame:YES];
+    
+    robotAnimationAction = [CCAnimate actionWithAnimation:robotAnim];
+    CCRepeatForever* repeatRobotAnimation = [CCRepeatForever actionWithAction:robotAnimationAction];
+    [robot runAction:repeatRobotAnimation];
+    
+}
+
 // on "init" you need to initialize your instance
 -(id) init
 {
@@ -41,24 +67,44 @@
 	// Apple recommends to re-assign "self" with the "super's" return value
 	if( (self=[super init]) ) {
         
-        CGSize size = [[CCDirector sharedDirector] winSize];
-        CCSprite *robot = [CCSprite spriteWithFile:@"spritebots_still_1.png"];
-        robot.position = ccp(size.width/2, size.height/2);
-        [self addChild:robot];
+        self.touchEnabled = YES;
         
-        CCAnimation* robotAnim = [CCAnimation animation];
-        [robotAnim addSpriteFrameWithFilename:@"spritebots_move_2.png"];
-        [robotAnim addSpriteFrameWithFilename:@"spritebots_move_3.png"];
-        [robotAnim addSpriteFrameWithFilename:@"spritebots_move_4.png"];
-        [robotAnim setDelayPerUnit:0.2f];
-        [robotAnim setRestoreOriginalFrame:YES];
-        
-        CCAnimate* robotAnimationAction = [CCAnimate actionWithAnimation:robotAnim];
-        CCRepeatForever* repeatRobotAnimation = [CCRepeatForever actionWithAction:robotAnimationAction];
-        [robot runAction:repeatRobotAnimation];
+        // init the robot sprite
+        [self initRobot];
 
 	}
 	return self;
+}
+
+- (void)registerWithTouchDispatcher
+{
+    [[[CCDirector sharedDirector] touchDispatcher] addTargetedDelegate:
+     self priority:0 swallowsTouches:YES];
+}
+
+-(BOOL) ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event{
+    
+    return YES;
+    
+}
+
+-(void) ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event{
+    
+    CGPoint touchLocation = [self convertTouchToNodeSpace:touch];
+    float robotVeolocity = size.width / 5.0;
+    CGPoint moveDifference = ccpSub(touchLocation, robot.position);
+    float distanceToMove = ccpLength(moveDifference);
+    float moveDuration = distanceToMove / robotVeolocity;
+    
+    if (moveDifference.x<0) {
+        robot.flipX = YES;
+    } else {
+        robot.flipX = NO;
+    }
+    
+    [self animateRobot];
+    [robot runAction:[CCMoveTo actionWithDuration:moveDuration position:touchLocation]];
+    
 }
 
 @end

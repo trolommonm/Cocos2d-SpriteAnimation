@@ -15,6 +15,9 @@
 // HelloWorldLayer
 @interface HelloWorldLayer : CCLayer
 {
+    CGSize size;
+    CCSprite *robot;
+    CCAnimate *robotAnimationAction;
 }
 
 // returns a CCScene that contains the HelloWorldLayer as the only child
